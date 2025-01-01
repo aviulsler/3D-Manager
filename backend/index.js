@@ -120,5 +120,63 @@ app.get('/api/items/filter', async (req, res) => {
     }
 });
 
+app.post('/api/categories', async (req, res) => {
+    const { name } = req.body; // Category name from request body
+
+    if (!name) {
+        return sendResponse(res, null, 400, 'Category name is required');
+    }
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO categories (name) VALUES ($1) RETURNING *',
+            [name]
+        );
+        sendResponse(res, result.rows[0], 201, 'Category added successfully');
+    } catch (error) {
+        console.error('Error adding category:', error);
+        sendResponse(res, null, 500, 'Failed to add category');
+    }
+});
+
+app.post('/api/subcategories', async (req, res) => {
+    const { name, category_id } = req.body;
+
+    if (!name || !category_id) {
+        return sendResponse(res, null, 400, 'Subcategory name and category_id are required');
+    }
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO subcategories (name, category_id) VALUES ($1, $2) RETURNING *',
+            [name, category_id]
+        );
+        sendResponse(res, result.rows[0], 201, 'Subcategory added successfully');
+    } catch (error) {
+        console.error('Error adding subcategory:', error);
+        sendResponse(res, null, 500, 'Failed to add subcategory');
+    }
+});
+
+app.post('/api/items', async (req, res) => {
+    const { name, subcategory_id, path } = req.body;
+
+    if (!name || !subcategory_id || !path) {
+        return sendResponse(res, null, 400, 'Item name, subcategory_id, and path are required');
+    }
+
+    try {
+        const result = await pool.query(
+            'INSERT INTO items (name, subcategory_id, path) VALUES ($1, $2, $3) RETURNING *',
+            [name, subcategory_id, path]
+        );
+        sendResponse(res, result.rows[0], 201, 'Item added successfully');
+    } catch (error) {
+        console.error('Error adding item:', error);
+        sendResponse(res, null, 500, 'Failed to add item');
+    }
+});
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

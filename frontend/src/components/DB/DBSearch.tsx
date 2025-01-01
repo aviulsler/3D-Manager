@@ -65,7 +65,7 @@ const DBSearch: React.FC = () => {
     return (
         <Box sx={{ padding: 2 }}>
             <Typography variant="h4" gutterBottom>
-                3D-Manager Frontend
+                DB Search
             </Typography>
 
             {loading ? (
