@@ -1,0 +1,17 @@
+{
+  "name": "3d-manager",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "private": true,
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+    "dependencies": {
+        "backend": "file:backend",
+        "frontend": "file:frontend"
+    }
+}
