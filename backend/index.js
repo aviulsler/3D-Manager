@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const multer = require('multer');
 const { Pool } = require('pg');
 require('dotenv').config();
 
@@ -174,6 +175,43 @@ app.post('/api/items', async (req, res) => {
     } catch (error) {
         console.error('Error adding item:', error);
         sendResponse(res, null, 500, 'Failed to add item');
+    }
+});
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+app.post('/api/upload-folder', upload.array('files', 100), async (req, res) => {
+    try {
+        const { item_name, subcategory_id } = req.body;
+
+        if (!item_name || !subcategory_id || !req.files || req.files.length === 0) {
+            return sendResponse(res, null, 400, 'Item name, subcategory_id, and folder files are required');
+        }
+
+        const folderPath = path.join(__dirname, 'uploads', item_name);
+
+        if (fs.existsSync(folderPath)) {
+            return sendResponse(res, null, 400, 'A folder with the same name already exists. Please use a different item name.');
+        }
+
+        fs.mkdirSync(folderPath, { recursive: true });
+
+        req.files.forEach((file) => {
+            const filePath = path.join(folderPath, file.originalname);
+            fs.writeFileSync(filePath, file.buffer);
+        });
+
+        const relativeFolderPath = path.join('uploads', item_name); // Path to store in DB
+        const result = await pool.query(
+            'INSERT INTO items (name, subcategory_id, path) VALUES ($1, $2, $3) RETURNING *',
+            [item_name, subcategory_id, relativeFolderPath]
+        );
+
+        sendResponse(res, result.rows[0], 201, 'Folder uploaded and item added successfully');
+    } catch (error) {
+        console.error('Error uploading folder:', error);
+        sendResponse(res, null, 500, 'Failed to upload folder');
     }
 });
 

@@ -1,7 +1,19 @@
-import { useState, useEffect } from 'react';
+import {useState, useEffect} from 'react';
 import axios from 'axios';
-import { useDropzone } from 'react-dropzone';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Button, TextField, MenuItem, Select, InputLabel, FormControl, SelectChangeEvent } from '@mui/material';
+import {useDropzone} from 'react-dropzone';
+import {
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Button,
+    TextField,
+    MenuItem,
+    Select,
+    InputLabel,
+    FormControl,
+    SelectChangeEvent
+} from '@mui/material';
 
 interface Category {
     id: string;
@@ -20,7 +32,7 @@ const DBUpload = () => {
     const [selectedCategory, setSelectedCategory] = useState<string>('');
     const [selectedSubcategory, setSelectedSubcategory] = useState<string>('');
     const [itemName, setItemName] = useState<string>('');
-    const [folderPath, setFolderPath] = useState<string>('');
+    const [folderFiles, setFolderFiles] = useState<File[]>([]);
     const [openDialog, setOpenDialog] = useState<boolean>(false);
 
     useEffect(() => {
@@ -57,39 +69,33 @@ const DBUpload = () => {
     };
 
     const handleFolderUpload = (acceptedFiles: File[]) => {
-        const folder = acceptedFiles[0];
-        setFolderPath(folder.webkitRelativePath);
-
-        const formData = new FormData();
-        formData.append('folder', folder);
-
-        axios.post('/upload-folder', formData)
-            .then(() => {
-                console.log('Folder uploaded');
-            })
-            .catch((error) => {
-                console.error('Error uploading folder:', error);
-            });
+        setFolderFiles(acceptedFiles);
     };
 
-    const { getRootProps, getInputProps } = useDropzone({
+    const {getRootProps, getInputProps} = useDropzone({
         onDrop: handleFolderUpload,
-        noClick: true,
-        noKeyboard: true,
-        accept: { 'application/zip': ['.zip'], 'application/x-tar': ['.tar'], 'application/gzip': ['.gz'] },
+        noClick: false,
+        noKeyboard: false,
+        multiple: true, // Allow multiple files (necessary for folder contents)
+        accept: undefined, // Allow all file types within the folder
     });
 
     const handleSubmit = () => {
-        if (!itemName || !selectedSubcategory) {
-            alert('Item name and subcategory are required');
+        if (!itemName || !selectedSubcategory || folderFiles.length === 0) {
+            alert('Item name, subcategory, and folder upload are required');
             return;
         }
 
-        axios.post('/api/items', {
-            name: itemName,
-            subcategory_id: selectedSubcategory,
-            path: folderPath,
-        })
+        const formData = new FormData();
+        folderFiles.forEach((file) => {
+            formData.append('files', file, file.webkitRelativePath); // Preserve folder structure
+        });
+
+        formData.append('item_name', itemName);
+        formData.append('subcategory_id', selectedSubcategory);
+        console.log(formData);
+        axios
+            .post('http://localhost:5000/api/upload-folder', formData)
             .then(() => {
                 alert('Item added successfully');
             })
@@ -120,21 +126,19 @@ const DBUpload = () => {
                         </Select>
                     </FormControl>
 
-                    {selectedCategory && (
-                        <FormControl fullWidth>
-                            <InputLabel>Subcategory</InputLabel>
-                            <Select
-                                value={selectedSubcategory}
-                                onChange={handleSubcategoryChange}
-                            >
-                                {subcategories.map((subcategory) => (
-                                    <MenuItem key={subcategory.id} value={subcategory.id}>
-                                        {subcategory.name}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
-                    )}
+                    <FormControl fullWidth>
+                        <InputLabel>Subcategory</InputLabel>
+                        <Select
+                            value={selectedSubcategory}
+                            onChange={handleSubcategoryChange}
+                        >
+                            {subcategories.map((subcategory) => (
+                                <MenuItem key={subcategory.id} value={subcategory.id}>
+                                    {subcategory.name}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
 
                     <TextField
                         label="Item Name"
@@ -144,10 +148,27 @@ const DBUpload = () => {
                         margin="normal"
                     />
 
-                    <div {...getRootProps()} style={{ border: '2px dashed #ccc', padding: '10px', marginTop: '10px' }}>
-                        <input {...getInputProps()} />
+                    <div {...getRootProps()} style={{border: '2px dashed #ccc', padding: '10px', marginTop: '10px'}}>
+                        <input
+                            {...getInputProps()}
+                            // @ts-ignore
+                            webkitdirectory=""
+                        />
                         <p>Drag & drop a folder here, or click to select a folder</p>
                     </div>
+
+                    {folderFiles.length > 0 && (
+                        <div>
+                            <h3>Files to be uploaded:</h3>
+                            <ul>
+                                {folderFiles.map((file: any, index: number) => (
+                                    <li key={index}>
+                                        {file.webkitRelativePath} {/* Show the relative path of the file */}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenDialog(false)} color="primary">Cancel</Button>
