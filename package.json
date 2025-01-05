@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+    "start": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\" \"C:\\Development\\minIO\\minio.exe server C:\\minio --console-address :9001\""
   },
   "private": true,
   "devDependencies": {
