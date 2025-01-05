@@ -15,6 +15,7 @@
     "@emotion/styled": "^11.14.0",
     "@mui/material": "^6.3.1",
     "backend": "file:backend",
-    "frontend": "file:frontend"
+    "frontend": "file:frontend",
+    "minio": "^8.0.3"
   }
 }

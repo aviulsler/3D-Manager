@@ -66,15 +66,14 @@ const DBUpload: React.FC = () => {
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        // accessKey: "bKq0IH3sdEbCmkPOWG0Q",
+        // secretKey: "mVLHEHi2usU4SpSx1vLk67LevXWhXAsmyXhwGwtn",
         const files = event.target.files;
         if (files) {
             console.log("Files in the folder:", files);
         }
     };
 
-    // @ts-ignore
-    // @ts-ignore
-    // @ts-ignore
     return (
         <Box
             sx={{
