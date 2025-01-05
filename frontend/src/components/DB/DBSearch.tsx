@@ -1,29 +1,23 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import CategorySelect from "./CategorySelect.tsx";
-import SubcategorySelect from "./SubcategorySelect.tsx";
-import ItemList from "./ItemList.tsx";
-import { Box, CircularProgress, Typography, SelectChangeEvent } from "@mui/material";
+import { Category, Item, Subcategory } from "../../types.ts";
+import { Box, Typography, SelectChangeEvent, MenuItem, Select, List, ListItem } from "@mui/material";
 
 const DBSearch: React.FC = () => {
-    const [categories, setCategories] = useState<any[]>([]);
-    const [subcategories, setSubcategories] = useState<any[]>([]);
-    const [items, setItems] = useState<any[]>([]);
+    const [categories, setCategories] = useState<Category[]>([]);
+    const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+    const [items, setItems] = useState<Item[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-    const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        setLoading(true);
         axios
             .get("http://localhost:5000/api/categories")
             .then((response) => {
                 setCategories(response.data.data);
-                setLoading(false);
             })
             .catch((error) => {
                 console.error("Error fetching categories:", error);
-                setLoading(false);
             });
     }, []);
 
@@ -32,16 +26,13 @@ const DBSearch: React.FC = () => {
         setSelectedCategory(categoryId);
         setSelectedSubcategory(null);
 
-        setLoading(true);
         axios
             .get(`http://localhost:5000/api/subcategories/filter?category_id=${categoryId}`)
             .then((response) => {
                 setSubcategories(response.data.data);
-                setLoading(false);
             })
             .catch((error) => {
                 console.error("Error fetching subcategories:", error);
-                setLoading(false);
             });
     };
 
@@ -49,43 +40,70 @@ const DBSearch: React.FC = () => {
         const subcategoryId = event.target.value as string;
         setSelectedSubcategory(subcategoryId);
 
-        setLoading(true);
         axios
             .get(`http://localhost:5000/api/items/filter?subcategory_id=${subcategoryId}`)
             .then((response) => {
                 setItems(response.data.data);
-                setLoading(false);
             })
             .catch((error) => {
                 console.error("Error fetching items:", error);
-                setLoading(false);
             });
     };
 
     return (
-        <Box sx={{ padding: 2 }}>
-            <Typography variant="h4" gutterBottom>
-                DB Search
-            </Typography>
-
-            {loading ? (
-                <CircularProgress />
-            ) : (
-                <>
-                    <CategorySelect
-                        categories={categories}
-                        selectedCategory={selectedCategory}
-                        onCategoryChange={handleCategoryChange}
-                    />
-                    {selectedCategory && (
-                        <SubcategorySelect
-                            subcategories={subcategories}
-                            selectedSubcategory={selectedSubcategory}
-                            onSubcategoryChange={handleSubcategoryChange}
-                        />
-                    )}
-                    {selectedSubcategory && <ItemList items={items} />}
-                </>
+        <Box
+            sx={{
+                bgcolor: "darkgray",
+                width: "80%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+            }}
+        >
+            <Typography>DBSearch</Typography>
+            <Select
+                sx={{ width: "30%" }}
+                labelId="category-label"
+                value={selectedCategory || ""}
+                onChange={handleCategoryChange}
+                displayEmpty
+            >
+                <MenuItem value="" disabled>
+                    Select a category
+                </MenuItem>
+                {categories.map((category) => (
+                    <MenuItem key={category.id} value={category.id}>
+                        {category.name}
+                    </MenuItem>
+                ))}
+            </Select>
+            {selectedCategory && (
+                <Select
+                    sx={{ width: "30%" }}
+                    labelId="subcategory-label"
+                    value={selectedSubcategory || ""}
+                    onChange={handleSubcategoryChange}
+                    displayEmpty
+                >
+                    <MenuItem value="" disabled>
+                        Select a subcategory
+                    </MenuItem>
+                    {subcategories.map((subcategory) => (
+                        <MenuItem key={subcategory.id} value={subcategory.id}>
+                            {subcategory.name}
+                        </MenuItem>
+                    ))}
+                </Select>
+            )}
+            {selectedSubcategory && (
+                <List>
+                    {items.map((item) => (
+                        <ListItem key={item.id} value={item.id}>
+                            {item.name}
+                        </ListItem>
+                    ))}
+                </List>
             )}
         </Box>
     );
